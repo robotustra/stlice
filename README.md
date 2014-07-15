@@ -5,8 +5,8 @@ My attempt to make fast console slicer for STL files.
 
 The final goal.
 
-	1) Stlice should read ascii STL files.
-	2) Stlice is a console application.
+	1) STLice should read ascii STL files.
+	2) STLice is a console application.
 	3) STLice generate contours and final path to generate g-code.
 
 
@@ -29,9 +29,9 @@ endfacet
 
 endsolid name
 
-The main algorythm:
+The main algorithm:
 
-	1) Load points + projection of normales (could be up to 3 normales for each point)
+	1) Load points + projection of normals (could be up to 3 normals for each point)
 	1.5) Load connection between points. (Joints.)
 	2) Sort all vortex by Z.
 	3) Find min max for x,y,z for all vortex.
