@@ -1,3 +1,4 @@
+
 My attempt to make fast console slicer for STL files.
 
 15.07.2014
@@ -49,3 +50,4 @@ The main algorithm:
 	8) Proceed for all layers.
 
 If Z spacing between points is too high, reduce the mesh along Z axis before start of procedure
+
