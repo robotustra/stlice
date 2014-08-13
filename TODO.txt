@@ -1,0 +1,71 @@
+		This file contains all implementation details and ideas on the base of STLice
+
+
+15.07.2014
+----------
+
+Data structure and algorithm:
+-----------------------------
+
+
+
+1) Load points + projection of normals (could be up to 3 normals for each point)
+1.5) Load connection between points. (Joints.)
+1.6) Scale models and place them accordingly if there are many models.
+
+	The STL file contains points groped by 3 and having common normal vector, showing the face of the triangle.
+	This information is ambigous and we need to convert/simplify it for our needs.
+
+	3D model is a surface, surrounding some volume and this volume should be represented finally as one polyline
+	from the beginning to the very end. Let's call it "track".
+
+	Possibly this track could be optimized by the length or by acceleration (to avoid frequent change of directions) 
+	for example.
+
+	There are some possible "objects" in the concept. 
+	A dot or vortex has 3 coordinates in the space, ID (integer value), color (optinal), index of normal.
+	Normals are vectrors, which could be read from STL file, or regenerated from triangles (in repair STL mode).
+	Each vector has and index, which is refered by some dots.
+
+	For our task the all 3 coordinates are not necessary, and we can use only the projection of normales on plane Z.
+	We will need this information to understand what area of contur must be filled.
+
+	A "rib" is a line  connecting a pair of dots(points). We will use this term just in this context. 
+
+	So, first we load normal for triangle, then 3 dots and then create 3 or less number of ribs. For closed model the
+	number of ribs will be 2 times less then dots.
+
+	The memory allocation could be done block way, because we will just increase the number of points during generation of 
+	conturs and the track.
+
+	During loading of model's coordinates they could be scaled and moved, to avoid looping through them second time. 
+
+
+2) Sort all vortex by Z.
+3) Find min max for x,y,z for all vortex.
+
+	Most probably it's possible to find minimal and maximal position and also sort them by Z coordinate.
+	Now I can't to tell what is better, sort it after load or during the load. 
+	
+Loop to create contours:
+4) Start from minimal Z.
+
+	After sorting all dots, we will have them ordered by Z coordinate. 
+
+	Finding all dots which belongs to the layer from with Z_slab_current <= Z < (Z_slab_current + slab_thickness).
+	(salb_thickness is taken from options of slicing.)
+
+	
+5) Look for all joints to the upper dots.
+
+	Make list of ribs which have one dot in the current slab and other end upper the current slab.
+
+6) Find intersection of all joints with horizontal plane.
+	
+	The dots in the slab are the intersection or rib with the horizontal plane (Z_slab_current + slab_thickness = const).
+	After dot generation the normal should be copied from parent dots and neighbour points for the new one should be updated.
+
+	This procedure chould be done for all ribs intersecting the plane. (This task could be done in parallel. ) 
+
+	7) Save layer, update connection between existing points and newly created.
+	8) Proceed for all layers.
