@@ -11,7 +11,7 @@ BUILD_TYPE = RELEASE
 VERSION ?= DEV
 CXX ?= gcc
 #CFLAGS += -c -Wall -Wextra -Wold-style-cast -Woverloaded-virtual -std=c++11 -DVERSION=\"$(VERSION)\" -isystem libs
-CFLAGS += -c -Wall -Wextra -Wold-style-cast -Woverloaded-virtual
+CFLAGS += -c -Wall -Wextra -Woverloaded-virtual
 
 ifeq ($(BUILD_TYPE),DEBUG)
 	CFLAGS+=-ggdb -Og -g
