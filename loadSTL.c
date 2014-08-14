@@ -30,7 +30,8 @@ void* fgets_(char* ptr, size_t len, FILE* f)
 */
 
 // This function returns the number of points in the model.
-long countPointsSTLModel_ascii(const char* filename)
+long countPointsSTLModel_ascii(const char* filename, 
+	double * minx, double * maxx, double * miny, double * maxy, double * minz, double * maxz)
 {
     FILE* f = fopen(filename, "rt");
     if (f == NULL) {
@@ -42,10 +43,20 @@ long countPointsSTLModel_ascii(const char* filename)
     int n = 0;
     long nt = 0;
     double x,y,z;
+    *minx = *miny = *minz = 1000000.0;
+    *maxx = *maxy = *maxz = -10000000.0;
     while(fgets_(buffer, sizeof(buffer), f))
     {
         if (sscanf(buffer, " vertex %lf %lf %lf", &x, &y, &z) == 3)
         {
+        	if ( x < *minx ) *minx = x;
+        	if ( y < *miny ) *miny = y;
+        	if ( z < *minz ) *minz = z;
+
+        	if ( x > *maxx ) *maxx = x;
+        	if ( x > *maxy ) *maxy = y;
+        	if ( x > *maxz ) *maxz = z;
+
         	printf("\rLoading ... %c", pc[nt%4]);
             n++;
             switch(n)

@@ -8,6 +8,9 @@ int main (int argc, char * argv[])
 {
 	long alloc_total = 0;
 	long n_faces, n_faces_uniq;
+	double min_x, max_x;
+	double min_y, max_y;
+	double min_z, max_z;
 
 	if (argc == 1) {
 		printf("Usage: %s [OPTIONS] stl_file\n", argv[0]);
@@ -15,8 +18,10 @@ int main (int argc, char * argv[])
 	}
 
 	// total number of points described in the file.
-	n_pt = countPointsSTLModel_ascii(argv[1]); 
-	printf("Points in the model: %ld\n", n_pt);
+	n_pt = countPointsSTLModel_ascii(argv[1], &min_x, &max_x, &min_y, &max_y, &min_z, &max_z); 
+	printf("Points in the STL file: %ld\n", n_pt);
+	printf("Z min value: %.3lf\n", min_z);
+	printf("Object size: X: %.3lfmm, Y: %.3lfmm, Z: %.3lfmm\n", max_x - min_x, max_y - min_y, max_z - min_z);
 
 	//Allocate all points of model.
 	px = (double *) malloc(n_pt * sizeof(double)); 
@@ -43,7 +48,7 @@ int main (int argc, char * argv[])
 	printf("Number of faces: %ld\n", n_faces);
 	printf("Number of unique faces: %ld\n", n_faces_uniq);
 
-
+	// Should already know min max values.
 
 
 
