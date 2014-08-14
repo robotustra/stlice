@@ -11,6 +11,18 @@ int main (int argc, char * argv[])
 	double min_x, max_x;
 	double min_y, max_y;
 	double min_z, max_z;
+	double h_layer = 0.2; //default layers thickness if not overwritten by input
+	long i, j; // counter
+	long * ptl_down; // the points coordinates in the bottom of slab.
+	long * ptl_up; // the points to which bottom points are connected. (to find directing vector.)
+	long npt_bot = 0; // the number of points on the bottom.
+	long npt_up = 0; // the number of point which are higher.
+	int n_layers = 0; // the number of layers.
+	int current_layer = 0;
+	double ** layer_x; // x coordinates of particular layer.
+	double ** layer_y; // y coordinates of particular layer.
+	double ** layer_z; // z coordinates of particular layer.
+	long * layer_npt; // the number of points allocated in the layer.
 
 	if (argc == 1) {
 		printf("Usage: %s [OPTIONS] stl_file\n", argv[0]);
@@ -42,6 +54,23 @@ int main (int argc, char * argv[])
 	
 	printf("Allocated: %ld bytes\n", alloc_total);
 
+	// Calculate the number of layers
+	n_layers = (max_z - min_z) / h_layer;
+	n_layers++;
+	printf("Number of layers: %d\n", n_layers );
+	// Allocate pointers for countur points. They might have different coordinates than original one.
+	layer_x = (double **) malloc( n_layers * sizeof(double*)) ;
+	layer_y = (double **) malloc( n_layers * sizeof(double*)) ;
+	layer_z = (double **) malloc( n_layers * sizeof(double*)) ;
+
+	layer_npt = (long *) malloc( n_layers * sizeof(long)) ;
+	
+	alloc_total += 3 * n_layers * sizeof(double*) + n_layers * sizeof(long);
+	
+	printf("Allocated: %ld bytes\n", alloc_total);
+	//After we will allocate all layer counturs and save points of to that arrays.
+
+
 	//Load model into memory
 	n_uniq = loadModelSTL_ascii(argv[1], n_pt, px, py, pz, pt_face1, pt_face2, pt_face3, &n_faces, &n_faces_uniq);
 	printf("Unique points in the model: %ld\n", n_uniq);
@@ -49,8 +78,70 @@ int main (int argc, char * argv[])
 	printf("Number of unique faces: %ld\n", n_faces_uniq);
 
 	// Should already know min max values.
+	// Shifting all points by Z_min to get the surface points.
 
+	if (min_z != 0) {
+		printf("Shifting model by Z min.\n");
+	}
 
+	
+	//#2 The number of points we will use is n_uniq.
+	// The number of faces which is used to look through faces ia n_faces_uniq.
+
+	//Let's put slice thickness is 0.2 mm for tests, after it will be input from console.
+	//Looking for all point in the slab (0 .. 0.2) 
+	// actually we could qsort all points by Z to speed up by slicing, but this could be done after. 
+	// now we will just look through all list of points.
+
+	// First just estimate the number of point in the first layer. After allocate memory, to prevent waste of
+	// memory.
+
+	ptl_down = (long *) malloc( n_uniq * sizeof(long));
+	alloc_total += n_uniq * sizeof(long);
+
+	ptl_up = (long *) malloc( n_uniq * sizeof(long));
+	alloc_total += n_uniq * sizeof(long);
+	
+	printf("Allocated: %ld bytes\n", alloc_total);
+
+	npt_bot = 0;
+
+	for (i=0; i<n_uniq; i++)
+	{
+		if(  (0 <= pz[i]) && (pz[i] <= h_layer) )
+		{
+			//our client
+			ptl_down[npt_bot] = i; // the index of the point.
+			npt_bot++;
+		}
+	}
+	printf("The number of points in layer %ld: %ld\n", 1, npt_bot);
+
+	// Looking for all neighbours which have Z more than current slab and which are connected with current bottom points.
+
+	npt_up = 0;
+	for (i=0; i<n_faces_uniq; i++)
+	{
+		for(j=0; j<npt_bot; j ++)
+		{
+			if ( pt_face1[i] == ptl_down[j]) {
+				// checking for neighbours of this point, if they have bigger Z.
+				if ( pz[pt_face2[i]] > h_layer ) npt_up ++; 
+				if ( pz[pt_face3[i]] > h_layer ) npt_up ++;
+			}
+			if ( pt_face2[i] == ptl_down[j]) {
+				// checking for neighbours of this point, if they have bigger Z.
+				if ( pz[pt_face1[i]] > h_layer ) npt_up ++; 
+				if ( pz[pt_face3[i]] > h_layer ) npt_up ++;
+			}
+			if ( pt_face3[i] == ptl_down[j]) {
+				// checking for neighbours of this point, if they have bigger Z.
+				if ( pz[pt_face1[i]] > h_layer ) npt_up ++; 
+				if ( pz[pt_face2[i]] > h_layer ) npt_up ++;
+			}
+		}
+	}
+	printf("The number of points connected to layer %ld: %ld\n", 1, npt_up);
 
 	//free all stuff
 
