@@ -144,6 +144,18 @@ int main (int argc, char * argv[])
 	// Should already know min max values.
 	// Shifting all points by Z_min to get the surface points.
 
+	//count how many normales have every point,
+	for (i=0; i<n_uniq; i++)
+	{
+		norm_cnt = 0;
+		for(j=0; j<n_faces_uniq; j++){
+			if( (pt_face1[j] == i) || (pt_face2[j] == i) || (pt_face1[j] == i)) {
+				norm_cnt ++;
+			}
+		}
+		printf("Point %ld, normales: %ld\n", i, norm_cnt);
+	}
+
 	if (min_z != 0) {
 		printf("Shifting model by Z min.\n");
 	}
