@@ -80,17 +80,19 @@ long countPointsSTLModel_ascii(const char* filename,
 
 
 long loadModelSTL_ascii(const char* filename, long n_pt, double * px, double * py, double * pz,
-	long * pt_face1, long * pt_face2, long * pt_face3, long * n_faces, long * n_faces_unique )
+	long * pt_face1, long * pt_face2, long * pt_face3, long * n_faces, long * n_faces_unique,
+    long * pt_bond1, long * pt_bond2, long * n_bonds )
 {
     FILE* f = fopen(filename, "rt");
     char buffer[1024];
     long ipt = 0, nt = 0;
-    long i, j;
+    long i, j, k, l;
 	double x,y,z;    
 	int n = 0;
 	long pt_index = 0;
 	long ipf = 0; // count faces
 	long ipf_uniq = 0; // unique faces
+    long ipp_uniq = 0; // unique pairs
 	long v1 = 0, v2 = 0, v3 = 0;
 
     while(fgets_(buffer, sizeof(buffer), f))
@@ -158,6 +160,42 @@ long loadModelSTL_ascii(const char* filename, long n_pt, double * px, double * p
 		    	    	pt_face3[ipf_uniq] = v3;
 		    	    	ipf_uniq ++;
 		    	    }
+                    // now check for all unique pairs. We need pairs to calculate generated points.
+                    j=0; k=0; l=0;
+                    for (i=0; i<ipp_uniq; i++)
+                    {
+                        if (((pt_bond1[i] == v1) && (pt_bond2[i] == v2)) ||
+                            ((pt_bond1[i] == v2) && (pt_bond2[i] == v1)) ){
+                            j++;
+                        }
+                        if (((pt_bond1[i] == v2) && (pt_bond2[i] == v3)) ||
+                            ((pt_bond1[i] == v3) && (pt_bond2[i] == v2)) ){
+                            k++;
+                        }
+                        if (((pt_bond1[i] == v1) && (pt_bond2[i] == v3)) ||
+                            ((pt_bond1[i] == v3) && (pt_bond2[i] == v1)) ){
+                            l++;
+                        }
+                        if ( (j>0) && (k>0) && (l>0) ) break;
+                    }       
+                    if (j == 0)
+                    {
+                        pt_bond1[ipp_uniq] = v1;
+                        pt_bond2[ipp_uniq] = v2;
+                        ipp_uniq++;
+                    }
+                    if (k == 0)
+                    {
+                        pt_bond1[ipp_uniq] = v2;
+                        pt_bond2[ipp_uniq] = v3;
+                        ipp_uniq++;
+                    }
+                    if (l == 0)
+                    {
+                        pt_bond1[ipp_uniq] = v1;
+                        pt_bond2[ipp_uniq] = v3;
+                        ipp_uniq++;
+                    }
                 }
 
                 n = 0;
@@ -166,6 +204,7 @@ long loadModelSTL_ascii(const char* filename, long n_pt, double * px, double * p
         }
     }
     printf("\nDone\n");
+    *n_bonds = ipp_uniq;
     *n_faces = ipf;
     *n_faces_unique = ipf_uniq;
     fclose(f);

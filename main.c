@@ -40,6 +40,9 @@ int main (int argc, char * argv[])
 	long * cnt_pt_index; // current layer index of parent points. to find faces in the next layer.
 	long v1, v2, v3;
 	long nl1, nl2, nl3;
+	long * pt_bond1;
+	long * pt_bond2;
+	long n_bonds = 0;
 
 	if (argc == 1) {
 		printf("Usage: %s [OPTIONS] stl_file\n", argv[0]);
@@ -59,15 +62,19 @@ int main (int argc, char * argv[])
 
 	alloc_total += 3 * n_pt * sizeof(double);
 	
-	pbond1 = (long *) malloc(n_pt * sizeof(long)); // the number of pairs, the number of connection is wrong.
+	//bonds
+	pt_bond1 = (long *) malloc (n_pt / 2 * sizeof(long));
+	pt_bond2 = (long *) malloc (n_pt / 2 * sizeof(long));
 
-	alloc_total += n_pt * sizeof(long);
+	alloc_total +=  n_pt * 0.5 * sizeof(long);	
+	
 
 	pt_face1 = (long *) malloc(n_pt/3 * sizeof(long));
 	pt_face2 = (long *) malloc(n_pt/3 * sizeof(long));
 	pt_face3 = (long *) malloc(n_pt/3 * sizeof(long));
 
 	alloc_total += n_pt * sizeof(long);
+
 	
 	printf("Allocated: %ld bytes\n", alloc_total);
 
@@ -88,11 +95,13 @@ int main (int argc, char * argv[])
 	//After we will allocate all layer counturs and save points of to that arrays.
 
 	//Load model into memory
-	n_uniq = loadModelSTL_ascii(argv[1], n_pt, px, py, pz, pt_face1, pt_face2, pt_face3, &n_faces, &n_faces_uniq);
+	n_uniq = loadModelSTL_ascii(argv[1], n_pt, px, py, pz, pt_face1, pt_face2, pt_face3, &n_faces, &n_faces_uniq,
+		pt_bond1, pt_bond2, &n_bonds);
 
 	printf("Unique points in the model: %ld\n", n_uniq);
 	printf("Number of faces: %ld\n", n_faces);
 	printf("Number of unique faces: %ld\n", n_faces_uniq);
+	printf("Number of unique pairs: %ld\n", n_bonds);
 
 	// Should already know min max values.
 	// Shifting all points by Z_min to get the surface points.
@@ -142,7 +151,7 @@ int main (int argc, char * argv[])
 	alloc_total += 3 * npt_total * sizeof(double);
 	
 	printf("Allocated: %ld bytes\n", alloc_total);
-
+	/*
 	//Generate all coordinates of our new points
 	npt_gen = 0;
 	for (i=0; i< n_faces_uniq; i++)
@@ -177,7 +186,7 @@ int main (int argc, char * argv[])
 		
 	}
 
-	
+	*/
 
 
 
@@ -188,7 +197,8 @@ int main (int argc, char * argv[])
 	free(pt_face1);
 	free(pt_face2);
 	free(pt_face3);
-	free(pbond1);
+	free(pt_bond1);
+	free(pt_bond2);
 	free(px);
 	free(py);
 	free(pz);
