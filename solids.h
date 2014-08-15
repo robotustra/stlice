@@ -13,6 +13,10 @@ long * pt_face1;	// faces of points.
 long * pt_face2;
 long * pt_face3;
 
+double * npx;	// normales.
+double * npy;
+double * npz;
+
 
 long 	n_pt;	// the number of point in the model.
 long 	n_uniq;

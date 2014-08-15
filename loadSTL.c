@@ -139,9 +139,10 @@ long loadModelSTL_ascii(const char* filename, long n_pt, double * px, double * p
             	ipf++;
             	//adding face if unique
                 {
+                    /*
                 	j=0;
                 	// count unique faces 
-		            for (i = 0; i<ipf_uniq; i++)
+		            for (i = ipf_uniq-1; i>=0; i--)
 		            {
 		            	if ( 	((pt_face1[i] == v1) && (pt_face2[i] == v2) && (pt_face3[i] == v3 )) ||
 		            	 		((pt_face1[i] == v2) && (pt_face2[i] == v3) && (pt_face3[i] == v1 )) ||
@@ -155,14 +156,19 @@ long loadModelSTL_ascii(const char* filename, long n_pt, double * px, double * p
 		            }
 		            if (j == 0) 
 		            { 	
+                    */
 		            	pt_face1[ipf_uniq] = v1;
 			        	pt_face2[ipf_uniq] = v2;
 		    	    	pt_face3[ipf_uniq] = v3;
-		    	    	ipf_uniq ++;
-		    	    }
+
+                       	ipf_uniq ++;
+
+
+                    /*
+		    	    }*/
                     // now check for all unique pairs. We need pairs to calculate generated points.
                     j=0; k=0; l=0;
-                    for (i=0; i<ipp_uniq; i++)
+                    for (i=ipp_uniq-1; i>=0; i--)
                     {
                         if (((pt_bond1[i] == v1) && (pt_bond2[i] == v2)) ||
                             ((pt_bond1[i] == v2) && (pt_bond2[i] == v1)) ){
