@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include "loadSTL.h"
 #include "solids.h"
+#include <math.h>
 
 #define very_small_number	1.0e-10
 
@@ -15,7 +16,7 @@ int main (int argc, char * argv[])
 	double min_y, max_y;
 	double min_z, max_z;
 	double h_layer = 0.2; //default layers thickness if not overwritten by input
-	long i, j; // counter
+	long i, j, l; // counter
 	double k; // coefficient
 	long * ptl_down; // the points coordinates in the bottom of slab.
 	long * ptl_up; // the points to which bottom points are connected. (to find directing vector.)
@@ -52,6 +53,10 @@ int main (int argc, char * argv[])
 	double z_start, z_finish;
 	double ax,ay,az,bx,by,bz; // temporary vctors.	
 	long norm_cnt = 0; // normales counter.
+	long l_index = 0;
+	double r_length = 0;
+	long l_npt = 0; // the number of points in the layer.
+	long p1_idx, p2_idx;
 
 
 
@@ -125,6 +130,9 @@ int main (int argc, char * argv[])
 	
 	printf("Allocated: %ld bytes\n", alloc_total);
 
+	// the number of normales is exactly the same as the number of faces.
+	// And the index of normale coniside with the index of face.
+
 	for (i=0; i<n_faces_uniq; i++)
 	{
 		ax = px[pt_face2[i]] - px[pt_face1[i]];
@@ -138,12 +146,19 @@ int main (int argc, char * argv[])
 		npx[i] = ay*bz - az*by;
 		npy[i] = az*bx - ax*bz;
 		npz[i] = ax*by - ay*bx;
+		r_length = sqrt( npx[i]*npx[i] + npy[i]*npy[i] + npz[i]*npz[i] );
+
+		npx[i] /= r_length;
+		npy[i] /= r_length;
+		npz[i] /= r_length;
+
 	}
 	printf("Normales done\n");
 
 	// Should already know min max values.
 	// Shifting all points by Z_min to get the surface points.
 
+#if 0
 	//count how many normales have every point,
 	for (i=0; i<n_uniq; i++)
 	{
@@ -159,7 +174,7 @@ int main (int argc, char * argv[])
 	if (min_z != 0) {
 		printf("Shifting model by Z min.\n");
 	}
-
+#endif
 	
 	//#2 The number of points we will use is n_uniq.
 	// The number of faces which is used to look through faces ia n_faces_uniq.
@@ -205,7 +220,7 @@ int main (int argc, char * argv[])
 				n_start = nl1;
 				n_finish = nl2;
 			}
-			for (j = n_start; j< n_finish ; j++ ) npt_gen++;	
+			for (j = n_start+1; j< n_finish ; j++ ) npt_gen++;	
 		}
 	}
 	printf("Number of points to generate: %ld\n", npt_gen );
@@ -223,9 +238,19 @@ int main (int argc, char * argv[])
 	alloc_total += 3 * npt_total * sizeof(double);
 	
 	printf("Allocated: %ld bytes\n", alloc_total);
+
 	
-	//Generate all coordinates of our new points
+	// Copy unique point to the common array for simplicity
 	npt_gen = 0;
+	for (i=0; i<n_uniq; i++){
+		cnt_z[npt_gen] = pz[i];
+		cnt_x[npt_gen] = px[i];
+		cnt_y[npt_gen] = py[i];
+		npt_gen++;
+	}
+
+#if 0	
+	// and Generate all coordinates of our new points
 	for (i=0; i< n_bonds; i++)
 	{
 		//consider all points which has different Z, crossing the horizontal plane.
@@ -263,7 +288,7 @@ int main (int argc, char * argv[])
 				z_finish = pz[v2];
 			}
 			
-			for (j = n_start; j< n_finish ; j++ )
+			for (j = n_start+1; j< n_finish ; j++ )
 			{
 				cnt_z[npt_gen] = j * h_layer;
 				k = (j * h_layer - z_start) / (z_finish - z_start); 
@@ -274,13 +299,8 @@ int main (int argc, char * argv[])
 			}
 		}
 	}
-	// copy unique point to the common array for simplicity
-	for (i=0; i<n_uniq; i++){
-		cnt_z[npt_gen] = pz[i];
-		cnt_x[npt_gen] = px[i];
-		cnt_y[npt_gen] = py[i];
-		npt_gen++;
-	}
+#endif
+	// Now we have all point in one array but the indexing from faces to points is saved, because
 
 	// this is a real number of allocated poins
 	printf("All points: %ld\n", npt_gen );
@@ -321,14 +341,69 @@ int main (int argc, char * argv[])
 		layer_npt[j] = npt_layer;
 		layer_pt_index[j] = current_layer_index;
 
-		//printf("Layer: %ld, Points: %ld\n", j, npt_layer );
+#if 0
+		printf("Layer: %ld, Points: %ld\n", j, npt_layer );
+#endif
 
 	}
 	printf("Total points after layering: %ld\n", npt_total );
 
 	//#3 Ready to process counturs.
 
+#if 0
+	//Test print of countur point.
+	//output all points of the first layer.
+	l_index = 0;
+	for (i=0; i< layer_npt[l_index]; i++)
+	{
+		printf(" %ld %.3lf %.3lf %.3lf\n", i, cnt_x[layer_pt_index[l_index][i]],
+			cnt_y[layer_pt_index[l_index][i]], cnt_z[layer_pt_index[l_index][i]] );
+	}
+#endif
 
+	//ordering points accordint to normals information.
+
+	l_index = 0;
+	l_npt = layer_npt[l_index]; // the number of points in the layer.
+	long ii = 0;
+	for (i=0; i< l_npt; i++)
+	{
+		p1_idx = layer_pt_index[l_index][i];
+
+		for (l=i+1; l<l_npt; l++){
+
+			p2_idx = layer_pt_index[l_index][l];
+
+			//x = cnt_x[p_idx];
+			//y = cnt_y[p_idx];
+			//z = cnt_z[p_idx];
+
+			for (j=0; j<n_faces_uniq; j++)
+			{
+				if ( (pt_face1[j] == p1_idx && pt_face2[j] == p2_idx && pz[pt_face3[j]] > pz[p1_idx]) ||
+					 (pt_face2[j] == p1_idx && pt_face3[j] == p2_idx && pz[pt_face1[j]] > pz[p1_idx]) ||
+					 (pt_face3[j] == p1_idx && pt_face1[j] == p2_idx && pz[pt_face2[j]] > pz[p1_idx]) ||
+					 (pt_face1[j] == p1_idx && pt_face3[j] == p2_idx && pz[pt_face2[j]] > pz[p1_idx]) ||
+					 (pt_face3[j] == p1_idx && pt_face2[j] == p2_idx && pz[pt_face1[j]] > pz[p1_idx]) ||
+					 (pt_face2[j] == p1_idx && pt_face1[j] == p2_idx && pz[pt_face3[j]] > pz[p1_idx]) 
+					 ) 
+				{
+					// the bond in the plane is found.
+					// it might happen that one vertex has more than two bonds in the 
+					// plane Z=0.
+
+					printf ("i: %ld, j: %ld\n", p1_idx, p2_idx);
+					ii++;
+				}
+			}
+		}
+		//looking for this point in the list of faces
+
+	}
+	printf("Pints: %ld, Bonds: %ld\n", l_npt, ii);
+
+
+	// Now I have to invent how to create a contour on points of layer
 
 
 

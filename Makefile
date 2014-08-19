@@ -23,7 +23,7 @@ ifeq ($(BUILD_TYPE),RELEASE)
 	CFLAGS+= -O3 -fomit-frame-pointer
 endif
 
-LDFLAGS += -Lbuild/ 	
+LDFLAGS += -Lbuild/  	
 
 SOURCES_RAW = main.c loadSTL.c 
 SOURCES = $(addprefix $(SRC_DIR)/,$(SOURCES_RAW))
