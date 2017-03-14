@@ -51,3 +51,7 @@ The main algorithm:
 
 If Z spacing between points is too high, reduce the mesh along Z axis before start of procedure
 
+14.03.2017
+----------
+
+	The sliser should be able to print 90 degree overhanging part.
