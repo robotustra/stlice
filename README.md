@@ -55,3 +55,12 @@ If Z spacing between points is too high, reduce the mesh along Z axis before sta
 ----------
 
 	The sliser should be able to print 90 degree overhanging part.
+	
+	To implement this feature the model should be analised on overhanging and some special path 
+	generation should be applied.
+	
+	In case of overhanging the printing goes into multilayer mode, it means that the upper layers are printing
+	to create a shell which will keep overhanging layers and the hot end should have some clearence to
+	be able work with not finished layer, adding overhanging parts after adding strenthen layers.
+
+
